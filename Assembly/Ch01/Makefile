@@ -13,3 +13,9 @@ connectgdb: main.elf
 
 clean:
 	rm -rf *.out *.bin *.elf
+
+help:
+	echo "machinecode"
+	echo "printbinaray"
+	echo "startqemu"
+	echo "connectgdb"
