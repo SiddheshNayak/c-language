@@ -6,7 +6,7 @@ In this tutorial, we will use the **Quick Emulator (QEMU)** to emulate a hardwar
 
 ### ISA Used
 
-The ISA used in this tutorial is **RISC-V**, specifically `riscv64i`, meaning we are emulating a 64-bit RISC-V CPU with integer instructions.
+The ISA used in this tutorial is **RISC-V**, specifically `rv32i`, meaning we are emulating a 32-bit RISC-V CPU with integer-only instructions.
 
 ---
 
@@ -18,6 +18,8 @@ Install the required toolchain, QEMU, and GDB using the following commands:
 sudo apt update -y
 sudo apt install -y gcc-riscv64-unknown-elf qemu-system-misc gdb-multiarch
 ```
+
+> 💡 **Note:** Even though the toolchain is named `riscv64-unknown-elf-gcc`, it can compile for 32-bit targets like `rv32i` when passed the appropriate `-march` and `-mabi` flags.
 
 ---
 
@@ -71,6 +73,8 @@ qemu-system-riscv32 -S -M virt -nographic -bios none -kernel main.elf -gdb tcp::
 - `-bios none`: Don't load any BIOS.
 - `-kernel main.elf`: Load the ELF as the kernel image.
 - `-gdb tcp::1234`: Enable GDB remote debugging on port 1234.
+
+> ⚠️ Ensure your linker script (`m.ld`) places `_start` at `0x80000000`, as that is where the virtual machine's RAM typically begins when using `-M virt`.
 
 ---
 
@@ -139,6 +143,8 @@ pc             0x80000000       0x80000000 <_start>
 
 - `pc` shows the address of the next instruction: `_start`.
 
+> 📝 These values are for demonstration and will vary based on the instruction flow and initial setup.
+
 ---
 
 ## Exiting
@@ -150,7 +156,7 @@ pc             0x80000000       0x80000000 <_start>
 
 ## ELF and Binary Inspection
 
-ELF files contain metadata used for debugging. To see the raw data:
+ELF files contain metadata used for debugging. To see the raw binary code:
 
 ```bash
 riscv64-unknown-elf-objcopy -O binary main.elf main.bin
@@ -170,29 +176,29 @@ xxd -e -c 4 -g 4 main.bin
 00000000: 0000006f   o...
 ```
 
-### What is `0000006f`?
+### What is `0x0000006f`?
 
-- It represents the instruction:
+This is the machine code for:
 
 ```asm
 _start:
     j _start
 ```
 
-- `0x0000006f` is the encoding for the jump instruction to offset `0`.
+- `j _start` is a **pseudo-instruction**, translated to:
+  
+```asm
+jal x0, 0
+```
 
-#### Why `jal`?
+- It causes a jump to the current address, effectively creating an infinite loop.
 
-- `j _start` is a pseudo-instruction.
-- Since the jump is to the same address (`0x0` offset), it is internally encoded as `jal`.
-
-For confirmation, refer to:
-- [RISC-V Instruction Decoder](https://luplab.gitlab.io/rvcodecjs/)
-- 📄 RISC-V ISA documentation
+> 🔍 You can confirm this using the [RISC-V Instruction Decoder](https://luplab.gitlab.io/rvcodecjs/) or refer to the official ISA manual.
 
 ![Decoder Screenshot](image.png)
 
-Another explanation from the ISA:
-> `j 0x0` is considered a **pseudo-instruction** translated to `jal` with 0 offset.
+Additionally, in the ISA spec:
+
+> `j 0x0` is defined as a **pseudo-instruction** that maps to `jal x0, 0`, which does not link and jumps with a zero offset.
 
 ![ISA PDF Screenshot](image-1.png)
