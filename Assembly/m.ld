@@ -1,18 +1,35 @@
-# Memory Layout
-# The Qemu indicates the Code address to be 0x80000000 and a memory of 4k
+/* 
+ * Linker Script for RISC-V Bare Metal Program
+ * Target: QEMU's 'virt' machine 
+ * Memory layout based on QEMU default for riscv32
+ */
 
+/* Define memory regions used by the program */
 MEMORY
 {
-    RAM : ORIGIN = 0X80000000, LENGTH = 4K
+    /* 
+     * QEMU 'virt' machine starts RAM at 0x80000000.
+     * We allocate 4 KB (4096 bytes) for our program here.
+     */
+    RAM (rx) : ORIGIN = 0x80000000, LENGTH = 4K
 }
 
-# Here we indicate the sections, and the location of the sections
-
+/* Define how different sections of the program are placed in memory */
 SECTIONS
 {
-.text : {
-    *(.text*)
-  } > RAM
+    /* 
+     * Place the .text section (code) in RAM starting at 0x80000000.
+     * The wildcard matches any section with a name starting with .text
+     * including .text, .text.startup, .text._start, etc.
+     */
+    .text : 
+    {
+        *(.text*)
+    } > RAM
 }
 
-# so the .text section is located at 0x80000000 (i.e. > RAM)
+/* 
+ * Summary:
+ * The .text section is linked at address 0x80000000, 
+ * which matches the start of RAM in QEMU's virtual memory layout.
+ */
