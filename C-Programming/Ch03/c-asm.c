@@ -1,5 +1,5 @@
 int sidhesh(){
-    int i = 10;
+    volatile int i = 10;
 
     i = i + 1;
     i = i + 10;
